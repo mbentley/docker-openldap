@@ -33,6 +33,7 @@ objectClass: olcModuleList
 cn: module
 olcModulepath:	/usr/lib/openldap
 olcModuleload:	back_mdb.so
+olcModuleload:	memberof.so
 #olcModuleload:	back_ldap.so
 #olcModuleload:	back_passwd.so
 
@@ -45,15 +46,16 @@ include: file:///etc/openldap/schema/cosine.ldif
 include: file:///etc/openldap/schema/inetorgperson.ldif
 include: file:///etc/openldap/schema/nis.ldif
 
+
 # Frontend settings
 #
 dn: olcDatabase=frontend,cn=config
 objectClass: olcDatabaseConfig
 objectClass: olcFrontendConfig
 olcDatabase: frontend
-#olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break
-#olcAccess: {1}to dn.exact="" by * read
-#olcAccess: {2}to dn.base="cn=Subschema" by * read
+olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break
+olcAccess: {1}to dn.exact="" by * read
+olcAccess: {2}to dn.base="cn=Subschema" by * read
 
 #
 # Sample global access control policy:
@@ -78,14 +80,19 @@ olcDatabase: frontend
 # rootdn can always read and write EVERYTHING!
 #
 
+
+# Config settings
+#
 dn: olcDatabase=config,cn=config
 objectClass: olcDatabaseConfig
 olcDatabase: config
+olcRootDN: cn=admin,cn=config
 olcRootPW: configsecret
 olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break
-olcAccess: {1}to dn.exact="" by * read
-olcAccess: {2}to dn.base="cn=Subschema" by * read
-olcAccess: {3}to * by * none
+#olcAccess: {1}to dn.exact="" by * read
+#olcAccess: {2}to dn.base="cn=Subschema" by * read
+##olcAccess: {3}to * by * none
+
 
 #######################################################################
 # LMDB database definitions
@@ -97,7 +104,10 @@ objectClass: olcMdbConfig
 olcDatabase: mdb
 olcDbMaxSize: 1073741824
 olcSuffix: dc=my-domain,dc=com
-olcRootDN: cn=Manager,dc=my-domain,dc=com
+olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break
+olcAccess: {1}to attrs=userPassword,shadowLastChange by self write by dn="cn=admin,dc=my-domain,dc=com" write by anonymous auth by * none
+olcAccess: {2}to * by self read by dn="cn=admin,dc=my-domain,dc=com" write by dn="cn=readonly,dc=my-domain,dc=com" read by * none
+olcRootDN: cn=admin,dc=my-domain,dc=com
 # Cleartext passwords, especially for the rootdn, should
 # be avoided.  See slappasswd(8) and slapd-config(5) for details.
 # Use of strong authentication encouraged.
@@ -107,6 +117,11 @@ olcRootPW: secret
 # Mode 700 recommended.
 olcDbDirectory:	/var/lib/openldap/openldap-data
 # Indices to maintain
+olcDbIndex: uid eq
+olcDbIndex: mail eq
+olcDbIndex: memberOf eq
+olcDbIndex: entryCSN eq
+olcDbIndex: entryUUID eq
 olcDbIndex: objectClass eq
 
 dn: olcDatabase=monitor,cn=config

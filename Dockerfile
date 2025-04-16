@@ -2,7 +2,7 @@
 FROM mbentley/alpine:latest
 LABEL maintainer="Matt Bentley <mbentley@mbentley.net>"
 
-RUN apk add --no-cache ca-certificates openldap openldap-back-mdb openldap-clients openssl shadow &&\
+RUN apk add --no-cache ca-certificates openldap openldap-back-mdb openldap-clients openldap-overlay-all openssl shadow &&\
   usermod -o -u 911 ldap &&\
   groupmod -o -g 911 ldap &&\
   mkdir /etc/openldap/slapd.d &&\
@@ -13,8 +13,8 @@ RUN apk add --no-cache ca-certificates openldap openldap-back-mdb openldap-clien
 COPY entrypoint.sh /
 
 # TODO:
-#   * figure out SSL/TLS (https://github.com/mbentley/docker-openldap/tree/master/image/service/slapd/assets/config/tls)
 #   * entrypoint script - use slaptest to validate config (only works for the dir or the deprecated conf file)
+#   * allow for manual or automatic via env var bootstrapping
 
 VOLUME ["/etc/openldap/slapd.d","/var/lib/openldap/openldap-data"]
 
