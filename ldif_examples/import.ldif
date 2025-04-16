@@ -1,0 +1,13 @@
+dn: dc=example,dc=com
+objectClass: dcObject
+objectClass: organization
+objectClass: top
+dc: example
+o: example.com
+
+dn: cn=readonly,dc=example,dc=com
+objectClass: organizationalRole
+objectClass: simpleSecurityObject
+cn: readonly
+userPassword: secret
+description: LDAP read only user

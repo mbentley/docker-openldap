@@ -2,6 +2,10 @@
 
 set -e
 
+DOMAIN="${DOMAIN:-example.com}"
+BASE_DN="$(echo "${DOMAIN}" | sed 's/\./,dc=/' | sed 's/^/dc=/')"
+
+
 # validate /etc/openldap/slapd.d exists
 if [ ! -d "/etc/openldap/slapd.d" ]
 then
@@ -30,13 +34,22 @@ then
 else
   # no data found
 
+  # TODO: determine if we should do this via variable
+  echo "INFO: replace base DN..."
+  sed -i "s/dc=example,dc=com/${BASE_DN}/g" /etc/openldap/slapd.ldif
+
   echo "INFO: no previous data found in /etc/openldap/slapd.d; performing initial bootstrap from /etc/openldap/slapd.ldif..."
   su -s /bin/sh ldap -c 'slapadd -n 0 -F /etc/openldap/slapd.d -l /etc/openldap/slapd.ldif'
   echo "done";echo
+
+  # TODO: configure importing data; use variable to determine if we should
+  #echo "INFO: importing test..."
+  #su -s /bin/sh ldap -c 'slapadd -F /etc/openldap/slapd.d -b "dc=my-domain,dc=com" -l /certs/test/users.ldif'
+  #echo "done";echo
 fi
 
 # check for a valid config
-echo "INFO: validaing the config db (0) in /etc/openldap/slapd.d..."
+echo "INFO: validaing cn=config in /etc/openldap/slapd.d..."
 slaptest -F /etc/openldap/slapd.d -n 0
 echo "done";echo
 
