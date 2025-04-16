@@ -28,3 +28,13 @@ docker run -it --rm \
   -v openldap-data:/var/lib/openldap/openldap-data \
   mbentley/openldap
 ```
+
+## To Do
+
+- [ ] entrypoint script - use slaptest to validate config (only works for the dir or the deprecated conf file)
+- [ ]  allow for manual or automatic via env var bootstrapping
+- [ ] ldif bootstrap
+    `oldModuleLoad`
+    `slapcat -n 0 | grep olcModuleLoad`
+- [ ] add??? `olcModuleLoad: {2}refint`
+
