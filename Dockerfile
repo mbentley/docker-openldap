@@ -2,18 +2,21 @@
 FROM mbentley/alpine:latest
 LABEL maintainer="Matt Bentley <mbentley@mbentley.net>"
 
-RUN apk add --no-cache ca-certificates openldap openldap-back-mdb openldap-clients
+RUN apk add --no-cache ca-certificates openldap openldap-back-mdb openldap-clients openssl shadow &&\
+  usermod -o -u 911 ldap &&\
+  groupmod -o -g 911 ldap &&\
+  mkdir /etc/openldap/slapd.d &&\
+  chgrp ldap /etc/openldap/slapd.conf /etc/openldap/slapd.ldif &&\
+  chown -R ldap:ldap /etc/openldap/slapd.d /var/lib/openldap /run/openldap &&\
+  ln -s /run/openldap /var/lib/openldap/run
+
+COPY entrypoint.sh /
 
 # TODO:
-#   * change ldap user from 100:101 to 911:911
-#   * script to configure ldap or just rely on persistent volumes? (if volumes, what files are needed?)
-#   * figure out SSL/TLS
+#   * figure out SSL/TLS (https://github.com/mbentley/docker-openldap/tree/master/image/service/slapd/assets/config/tls)
+#   * entrypoint script - use slaptest to validate config (only works for the dir or the deprecated conf file)
 
-#   * entrypoint script
-#     * Use slaptest to validate config
-#     * Figure out how to bootstrap custom config
-#     * Proper way to use /etc/openldap/slapd.d directory?
+VOLUME ["/etc/openldap/slapd.d","/var/lib/openldap/openldap-data"]
 
-VOLUME ["/var/lib/openldap/openldap-data"]
-
-CMD ["slapd","-4","-u","ldap","-g","ldap","-d","256"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["slapd","-4","-u","ldap","-g","ldap","-d","256","-h","ldap:/// ldapi:///"]

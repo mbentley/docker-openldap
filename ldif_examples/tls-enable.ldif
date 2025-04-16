@@ -1,0 +1,20 @@
+# see https://www.openldap.org/doc/admin26/tls.html
+dn: cn=config
+changetype: modify
+replace: olcTLSCipherSuite
+olcTLSCipherSuite: SECURE256:+SECURE128:-VERS-TLS-ALL:+VERS-TLS1.2:-RSA:-DHE-DSS:-CAMELLIA-128-CBC:-CAMELLIA-256-CBC
+-
+replace: olcTLSCACertificateFile
+olcTLSCACertificateFile: /certs/ca.crt
+-
+replace: olcTLSCertificateFile
+olcTLSCertificateFile: /certs/cert.pem
+-
+replace: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /certs/key.pem
+-
+replace: olcTLSDHParamFile
+olcTLSDHParamFile: /certs/dhparam.pem
+-
+replace: olcTLSVerifyClient
+olcTLSVerifyClient: try
