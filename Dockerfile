@@ -11,9 +11,9 @@ RUN apk add --no-cache ca-certificates openldap openldap-back-mdb openldap-clien
   ln -s /run/openldap /var/lib/openldap/run
 
 COPY entrypoint.sh /
-COPY ldif_examples/slapd.ldif /etc/openldap/slapd.ldif
+COPY slapd.ldif /etc/openldap/slapd.ldif
 
 VOLUME ["/etc/openldap/slapd.d","/var/lib/openldap/openldap-data"]
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["slapd","-4","-u","ldap","-g","ldap","-d","256","-h","ldap:/// ldapi:///"]
+CMD ["slapd","-4","-u","ldap","-g","ldap","-d","256","-h","ldap:/// ldaps:/// ldapi:///"]
