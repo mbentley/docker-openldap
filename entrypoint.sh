@@ -80,13 +80,25 @@ else
   else
     # no custom ldif provided; output details
     echo "INFO: server settings:"
-    echo "  LDAP domain:   ${LDAP_DOMAIN}"
-    echo "  LDAP Base DN:  ${LDAP_BASE_DN}"
+    echo "  LDAP domain:         ${LDAP_DOMAIN}"
+    echo "  LDAP base DN:        ${LDAP_BASE_DN}"
+    if [ "${LDAP_CONFIG_PASSWORD}" = "configsecret" ]
+    then
+      echo "  cn=config password:  configsecret (this is the default password!)"
+    else
+      echo "  cn=config password:  <set via LDAP_CONFIG_PASSWORD>"
+    fi
+    if [ "${LDAP_ADMIN_PASSWORD}" = "adminsecret" ]
+    then
+      echo "  LDAP admin password: adminsecret (this is the default password!)"
+    else
+      echo "  LDAP admin password: <set via LDAP_ADMIN_PASSWORD>"
+    fi
     echo
 
     # update base dn
-    echo "INFO: inserting Base DN (${LDAP_BASE_DN}) into /etc/openldap/slapd.ldif..."
-    sed -i "s#dc=example,dc=com#${LDAP_BASE_DN}#g" /etc/openldap/slapd.ldif
+    echo "INFO: inserting base DN (${LDAP_BASE_DN}) into /etc/openldap/slapd.ldif..."
+    sed -i "s#{{ LDAP_BASE_DN }}#${LDAP_BASE_DN}#g" /etc/openldap/slapd.ldif
 
     # update config password
     echo "INFO: inserting cn=config password into /etc/openldap/slapd.ldif..."
