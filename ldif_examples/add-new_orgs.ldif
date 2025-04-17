@@ -1,0 +1,28 @@
+dn: dc=example,dc=com
+objectClass: dcObject
+objectClass: organization
+objectClass: top
+dc: example
+o: example.com
+
+dn: dc=org1,dc=example,dc=com
+objectClass: dcObject
+objectClass: organization
+objectClass: top
+dc: org1
+o: org1.example.com
+
+dn: dc=org2,dc=example,dc=com
+objectClass: dcObject
+objectClass: organization
+objectClass: top
+dc: org2
+o: org2.example.com
+
+dn: cn=readonly,dc=example,dc=com
+objectClass: organizationalRole
+objectClass: simpleSecurityObject
+cn: readonly
+# password is "secret"
+userPassword: {SSHA}RP5LzH1iOsl+7BqjNvU0t8z5nFOEXdyS
+description: LDAP read only user

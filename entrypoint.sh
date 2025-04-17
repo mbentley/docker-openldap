@@ -4,7 +4,7 @@ set -e
 
 # set variables
 LDAP_DOMAIN="${LDAP_DOMAIN:-example.com}"
-LDAP_BASE_DN="$(echo "${LDAP_DOMAIN}" | sed 's/\./,dc=/g' | sed 's/^/dc=/')"
+LDAP_BASE_DN="${LDAP_BASE_DN:-$(echo "${LDAP_DOMAIN}" | sed 's/\./,dc=/g' | sed 's/^/dc=/')}"
 FIRST_RUN_ADD="${FIRST_RUN_ADD:-false}"
 CUSTOM_SLAPD_LDIF="${CUSTOM_SLAPD_LDIF:-false}"
 
@@ -15,12 +15,6 @@ LDAP_ADMIN_PASSWORD="${LDAP_ADMIN_PASSWORD:-adminsecret}"
 gen_password() {
   slappasswd -n -h '{SSHA}' -s "${@}"
 }
-
-# output details
-echo "INFO: server settings:"
-echo "  LDAP domain:   ${LDAP_DOMAIN}"
-echo "  LDAP Base DN:  ${LDAP_BASE_DN}"
-echo
 
 # validate /etc/openldap/slapd.d exists
 if [ ! -d "/etc/openldap/slapd.d" ]
@@ -79,43 +73,48 @@ then
   fi
 else
   # no data found; see if user is bringing their own slapd.ldif
-  if [ "${CUSTOM_SLAPD_LDIF}" != "true" ]
+  if [ "${CUSTOM_SLAPD_LDIF}" = "true" ]
   then
-    # TODO: change the import of the passwords in the db to be secure
+    # expect a custom ldif to have been mounted at /etc/openldap/slapd.ldif
+    echo "INFO: skipping /etc/openldap/slapd.ldif modifications; custom user defined slapd.ldif expected"
+  else
+    # no custom ldif provided; output details
+    echo "INFO: server settings:"
+    echo "  LDAP domain:   ${LDAP_DOMAIN}"
+    echo "  LDAP Base DN:  ${LDAP_BASE_DN}"
+    echo
+
     # update base dn
-    echo "INFO: inserting base DN (${LDAP_BASE_DN}) into /etc/openldap/slapd.ldif..."
-    sed -i "s/dc=example,dc=com/${LDAP_BASE_DN}/g" /etc/openldap/slapd.ldif
-    echo "done";echo
+    echo "INFO: inserting Base DN (${LDAP_BASE_DN}) into /etc/openldap/slapd.ldif..."
+    sed -i "s#dc=example,dc=com#${LDAP_BASE_DN}#g" /etc/openldap/slapd.ldif
 
     # update config password
-    echo "INFO: inserting config password into /etc/openldap/slapd.ldif..."
-    sed -i "s/{{ LDAP_CONFIG_PASSWORD }}/$(gen_password "${LDAP_CONFIG_PASSWORD}")/g" /etc/openldap/slapd.ldif
-    echo "done";echo
+    echo "INFO: inserting cn=config password into /etc/openldap/slapd.ldif..."
+    sed -i "s#{{ LDAP_CONFIG_PASSWORD }}#$(gen_password "${LDAP_CONFIG_PASSWORD}")#g" /etc/openldap/slapd.ldif
 
     # update rootdn password
     echo "INFO: inserting admin password into /etc/openldap/slapd.ldif..."
-    sed -i "s/{{ LDAP_ADMIN_PASSWORD }}/$(gen_password "${LDAP_ADMIN_PASSWORD}")/g" /etc/openldap/slapd.ldif
-    echo "done";echo
-  else
-    echo "INFO: skipping /etc/openldap/slapd.ldif modifications; custom user defined slapd.ldif expected"
+    sed -i "s#{{ LDAP_ADMIN_PASSWORD }}#$(gen_password "${LDAP_ADMIN_PASSWORD}")#g" /etc/openldap/slapd.ldif
   fi
 
   # perform the initial bootstrap
-  echo "INFO: performing initial bootstrap from /etc/openldap/slapd.ldif..."
+  echo "INFO: performing initial cn=config bootstrap from /etc/openldap/slapd.ldif..."
   su -s /bin/sh ldap -c 'slapadd -n 0 -F /etc/openldap/slapd.d -l /etc/openldap/slapd.ldif'
-  echo "done";echo
 
-  # only do this if this is our first run on a clean deployment
-  if [ "${FIRST_RUN_ADD}" = "true" ]
+  # only do this if this is our first run on a new deployment
+  if [ "${FIRST_RUN_ADD}" = "true" ] && [ ! -d /etc/openldap/imports ]
+  then
+    # missing the imports directory
+    echo "ERROR: FIRST_RUN_ADD=true but the directory /etc/openldap/imports does not exist!"
+  elif [ "${FIRST_RUN_ADD}" = "true" ]
   then
     echo "INFO: importing ldif file(s) from /etc/openldap/imports..."
 
     # loop through files in /etc/openldap/imports
-    for LDIF_FILE in /etc/openldap/imports/*
+    for LDIF_FILE in /etc/openldap/imports/*.ldif
     do
       echo "INFO: processing ${LDIF_FILE}..."
       su -s /bin/sh ldap -c "slapadd -F /etc/openldap/slapd.d -b \"${LDAP_BASE_DN}\" -l \"${LDIF_FILE}\""
-      echo "done"
     done
     echo
   fi
@@ -124,8 +123,7 @@ fi
 # check for a valid config
 echo "INFO: validaing cn=config in /etc/openldap/slapd.d..."
 slaptest -F /etc/openldap/slapd.d -n 0
-echo "done";echo
 
 # execute CMD
-echo "INFO: executing CMD '${*}'..."
+echo;echo "INFO: executing CMD '${*}'..."
 exec "${@}"
