@@ -3,6 +3,12 @@
 docker image for openldap
 based off of [mbentley/alpine:latest](https://github.com/mbentley/docker-base-alpine)
 
+## Images
+
+* `latest` - latest openldap from the alpine repos
+* `latest-legacy` - my fork of [osixia/docker-openldap](https://github.com/mbentley/osixia-docker-openldap/)
+  * For instructions on how to use the `latest-legacy` image, see the README in the repo linked above
+
 ## Usage
 
 ### Environment Variables
